@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<style>
+		#dividing_section {
+			background-color: #cce5ff;
+			border-radius: 10px;
+			padding: 15px;
+		}
+
+		#dividing_section h5 {
+			text-align: center;
+		}
+
+		#dividing_section:not(:last-child) {
+			margin-bottom: 5px;
+		}
+
+		.custom-container {
+			width: 40%;
+			margin-left: 40px;
+			margin-right: 10px;
+		}
+
+		.custom-margin {
+			margin-top: 5px;
+		}
+
+		.custom-image {
+			height: 100px;
+		}
+
+		.error {
+			border-color: red;
+		}
+
+		::placeholder {
+			opacity: 0.4;
+			/* Задаем прозрачность */
+			font-size: smaller;
+			/* Уменьшаем размер шрифта */
+			font-style: italic;
+			/* Добавляем курсив */
+		}
+
+
+		.custom-image:hover {
+			transform: scale(1.02);
+			/* Увеличение изображения на 2% при наведении */
+		}
+	</style>
+	<title>Калькулятор по продукту "Автокредитование"</title>
+	<script src="https://code.jquery.com/jquery-1.10.1.min.js"></script>
+</head>
+
+<body>
+	<div class="container custom-container">
+		<div class="row text-center">
+			<div class="col-12">
+				<img src="https://fin-talk.ru/upload/iblock/076/07656d5568ed27e3cf9539b0e01e252e.png" alt="Car Image"
+					class="custom-image">
+			</div>
+		</div>
+		<div id="dividing_section" class="custom-margin">
+			<div class="col">
+				<h5>Калькулятор по продукту "Автокредитование"</h5>
+				Программа кредитования:
+				<select class="form-control" id="programCrediting" onchange="updatePriceCar()">
+					<option value="1">Автокредит (автосалон/новый)</option>
+					<option value="2">Автокредит (автосалон/б/у)</option>
+					<option value="3">Автокредит (кредит наличными)</option>
+					<option value="4">Автокредит (рефинансирование)</option>
+				</select>
+			</div>
+		</div>
+		<div id="dividing_section" class="custom-margin">
+			<div class="col">
+				Стоимость автомобиля:
+				<input type="number" step="0.01" min="" max="" class="form-control" id="priceCar" placeholder=""
+					oninput="checkPriceCar()" onchange="checkingMaximumAndMinimumPriceCar()">
+				Сумма кредита:
+				<input type="number" step="0.01" min="100000" max="5000000" class="form-control" id="sumCredit"
+					placeholder="От 100 000 до 5 000 000 руб." onchange="checkingMaximumAndMinimumSumCredit()" disabled>
+				Срок кредитования:
+				<input type="number" step="1" min="12" max="84" class="form-control" id="numberMonths"
+					placeholder="От 12 до 84 месяцев" onchange="checkNumberMonths()">
+				Вид платежа:
+				<select class="form-control" id="typePayment">
+					<option value="1">Аннуитетный платеж</option>
+					<option value="2">Дифференцированный платеж</option>
+				</select>
+			</div>
+		</div>
+
+		<div id="dividing_section" class="custom-margin">
+			<div class="col">
+				<h5>Дополнительная информация по заявке</h5>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" value="" id="kascoCheckbox">
+					<label class="form-check-label" for="kascoCheckbox">
+						Отказ от КАСКО
+					</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" value="" id="deadlineCheckbox">
+					<label class="form-check-label" for="deadlineCheckbox">
+						Нарушение сроков по предоставлению залога ТС
+					</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" value="" id="salaryPensionCheckbox">
+					<label class="form-check-label" for="salaryPensionCheckbox">
+						Получает з/п или пенсию в Банке
+					</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" value="" id="bankPartnerEmployeeCheckbox">
+					<label class="form-check-label" for="bankPartnerEmployeeCheckbox">
+						Работник организации - партнера Банка
+					</label>
+				</div>
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" value="" id="positiveCreditHistoryCheckbox">
+					<label class="form-check-label" for="positiveCreditHistoryCheckbox">
+						Положительная кредитная история в Банке
+					</label>
+				</div>
+			</div>
+		</div>
+
+
+		<div id="dividing_section" class="custom-margin">
+			<div class="col">
+				<h5>Результаты расчета</h5>
+				<p>Процентная ставка по кредиту: <span id="interestRate"
+						style="margin-left: 20%; font-weight: bold; font-size: larger;"></span></p>
+				<p>Размер ежемесячного платежа: <span id="monthlyPayment"
+						style="margin-left: 20%; font-weight: bold; font-size: larger;"></span></p>
+				<button type="button" class="btn btn-light" style="width: 250px; margin-left: 50%;" id="calculateButton"
+					onclick="calculateInterestRate()">Рассчитать</button>
+			</div>
+		</div>
+	</div>
+
+
+
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+	<script>
+		function calculateInterestRate() {
+			var priceCar = document.getElementById("priceCar");
+			var sumCredit = document.getElementById("sumCredit");
+			var programCrediting = document.getElementById('programCrediting');
+			var numberMonths = document.getElementById("numberMonths");
+			var typePayment = document.getElementById('typePayment');
+
+			// Рассчитываем Кредит/залог
+			var KreditZalog = 0;
+
+			if (programCrediting.value === '1') {
+				KreditZalog = sumCredit.value / priceCar.value;
+			} else if (programCrediting.value === '2') {
+				KreditZalog = sumCredit.value / (priceCar.value - priceCar.value * 0.3);
+			}
+
+
+			// Процент от кредит/залог
+			var percentageOfKreditZalog = 0;
+
+			if (KreditZalog >= 0.26 && KreditZalog <= 0.5) {
+				percentageOfKreditZalog = 0.2;
+			} else if (KreditZalog > 0.5) {
+				percentageOfKreditZalog = 0.25;
+			}
+
+			// Рассчет повышающей ставки от количества месяцев кредитования
+			var calculatePercentageNumberMonths = 0;
+
+			if (numberMonths.value > 12 && numberMonths.value < 61) {
+				calculatePercentageNumberMonths = 0.35;
+			} else if (numberMonths.value > 60) {
+				calculatePercentageNumberMonths = 0.25;
+			}
+
+			// Рассчет базовой ставки
+			var baseRate = 0;
+
+			if (programCrediting.value === '1') {
+				baseRate = 12.65;
+			} else if (programCrediting.value === '2') {
+				baseRate = 12.95;
+			} else if (programCrediting.value === '3') {
+				baseRate = 13.15;
+			} else if (programCrediting.value === '4') {
+				baseRate = 12.45;
+			}
+
+			// Ставка по кредиту
+			var interestRate = baseRate + percentageOfKreditZalog + calculatePercentageNumberMonths;
+
+			var kascoCheckbox = document.getElementById("kascoCheckbox");
+			var deadlineCheckbox = document.getElementById("deadlineCheckbox");
+			var salaryPensionCheckbox = document.getElementById("salaryPensionCheckbox");
+			var bankPartnerEmployeeCheckbox = document.getElementById("bankPartnerEmployeeCheckbox");
+			var positiveCreditHistoryCheckbox = document.getElementById("positiveCreditHistoryCheckbox");
+
+			if (kascoCheckbox.checked === true) {
+				interestRate += 0.2;
+			}
+
+			if (deadlineCheckbox.checked === true) {
+				interestRate += 5.5;
+			}
+
+			if (salaryPensionCheckbox.checked === true || bankPartnerEmployeeCheckbox.checked === true) {
+				interestRate -= 0.2;
+			}
+
+			if (positiveCreditHistoryCheckbox.checked === true) {
+				interestRate -= 0.1;
+			}
+
+			interestRate = interestRate.toFixed(2);
+
+			// Проверка на минимальное значение
+			if (programCrediting.value === '1') {
+				if (interestRate < 12.35) {
+					interestRate = 12.35
+				}
+			} else if (programCrediting.value === '2') {
+				if (interestRate < 12.65) {
+					interestRate = 12.65
+				}
+			} else if (programCrediting.value === '3') {
+				if (interestRate < 12.85) {
+					interestRate = 12.85
+				}
+			} else if (programCrediting.value === '4') {
+				if (interestRate < 12.15) {
+					interestRate = 12.15
+				}
+			}
+
+
+
+			// Рассчет ежемесячного платежа
+			var monthlyPaymentAmount = 0;
+
+			var monthlyRate = interestRate / 12 / 100;  // месячная ставка по займу в долях от единицы, которая вычисляется по формуле: 
+			// годовая ставка / 12 мес. / 100%,
+
+			// Ануитетный платеж
+			if (typePayment.value === '1') {
+				monthlyPaymentAmount = sumCredit.value * monthlyRate * (Math.pow((1 + monthlyRate), numberMonths.value)) /
+					((Math.pow((1 + monthlyRate), numberMonths.value)) - 1);
+
+				// ЕП = С × ПС × (1 + ПС)ⁿ / ((1 + ПС)ⁿ – 1), где
+				// ЕП – размер ежемесячного платежа,
+				// С – сумма займа,
+				// ПС – месячная ставка по займу в долях от единицы, которая вычисляется по формуле: годовая ставка / 12 мес. / 100%,
+				// n – срок кредита (в месяцах).
+
+			}
+			// Дифференцированный платеж
+			else if (typePayment.value === '2') {
+				var monthlyPaymentAmount = (sumCredit.value / numberMonths.value) + (sumCredit.value - (1 - 1) * (sumCredit.value / numberMonths.value)) * monthlyRate;
+
+
+				// D = (P / N) + (P - (M - 1) * (P / N)) * R
+				// Где:
+				// D - сумма дифференцированного платежа
+				// P - сумма основного долга (или займа)
+				// N - срок кредита (в месяцах)
+				// M - номер текущего месяца
+				// R - процентная ставка в долях единицы (например, 0.05 для 5%) 
+				//		если 6% в год тогда  0.06 / 12 = 0.005 (месячная процентная ставка)
+			}
+
+
+			monthlyPaymentAmount = monthlyPaymentAmount.toFixed(2);
+
+			if (!isFinite(monthlyPaymentAmount)) {
+				monthlyPaymentAmount = 0;
+			}
+
+			// Выводим значения
+			document.getElementById("interestRate").textContent = interestRate + " %";
+
+			document.getElementById("monthlyPayment").textContent = monthlyPaymentAmount + " руб.";
+
+		}
+	</script>
+
+
+
+
+	<script>
+		function checkingMaximumAndMinimumSumCredit() {
+			var sumCreditInput = document.getElementById("sumCredit");
+			var sum = parseFloat(sumCreditInput.value);
+
+			if (sum < sumCreditInput.min || sum > sumCreditInput.max) {
+				sumCreditInput.classList.add("error");
+				alert("Сумма кредита должна быть не меньше " + sumCreditInput.min + " и не больше " + sumCreditInput.max);
+				sumCreditInput.value = ""; // Очистить поле ввода
+			}
+			else {
+				sumCreditInput.classList.remove("error");
+			}
+		}
+	</script>
+
+
+
+	<script>
+		function checkingMaximumAndMinimumPriceCar() {
+			var priceInput = document.getElementById("priceCar");
+			var price = parseFloat(priceInput.value);
+
+			if (price < priceInput.min) {                                                  // || price > priceInput.max) {
+				priceInput.classList.add("error");
+				alert("Цена автомобиля должна быть не меньше " + priceInput.min + " рублей!");          // + " и не больше " + priceInput.max);
+				priceInput.value = ""; // Очистить поле ввода
+				document.getElementById("sumCredit").disabled = true;
+			}
+			else {
+				priceInput.classList.remove("error");
+			}
+		}
+	</script>
+
+
+
+
+	<script>
+		function updatePriceCar() {
+			var programCrediting = document.getElementById('programCrediting');
+			var priceCar = document.getElementById('priceCar');
+			var sumCreditInput = document.getElementById("sumCredit");
+
+			if (programCrediting.value === '1') {
+				priceCar.placeholder = 'Не менее 117 648 руб.';                                      //'От 117 648 р. до 5 882 352 р.';
+				priceCar.min = '117648';
+				// priceCar.max = '5882352';
+				interestRate.textContent = '12,65% (Базовая)';
+			} else {
+				priceCar.placeholder = 'Не менее 142 858 руб.';                                      //'От 142 858 р. до 7 142 857 р.';
+				priceCar.min = '142858';
+				// priceCar.max = '7142857';
+			}
+
+			// Изменяем значения в сумме кредита
+			if (programCrediting.value === '1' && priceCar.value !== "") {
+				var maxCredit = (priceCar.value * 0.85).toFixed(2);
+
+				if (maxCredit <= 5000000) {
+					sumCreditInput.placeholder = 'От 100 000 руб. до ' + maxCredit + ' руб.';
+					sumCreditInput.min = '100000';
+					sumCreditInput.max = maxCredit;
+				}
+				else {
+					sumCreditInput.placeholder = 'От 100 000 руб. до 5 000 000 руб.';
+					sumCreditInput.min = '100000';
+					sumCreditInput.max = '5000000';
+				}
+			}
+			else if (priceCar.value === "") {
+				sumCreditInput.placeholder = 'От 100 000 руб. до 5 000 000 руб.';
+				sumCreditInput.min = '100000';
+				sumCreditInput.max = '5000000';
+			}
+			else {
+				var maxCredit = (priceCar.value * 0.7).toFixed(2);
+
+				if (maxCredit <= 5000000) {
+					sumCreditInput.placeholder = 'От 100 000 руб. до ' + maxCredit + ' руб.';
+					sumCreditInput.min = '100000';
+					sumCreditInput.max = priceCar.value * 0.7;
+				}
+				else {
+					sumCreditInput.placeholder = 'От 100 000 руб. до 5 000 000 руб.';
+					sumCreditInput.min = '100000';
+					sumCreditInput.max = '5000000';
+				}
+			}
+
+
+			// Меняем базовую ставку
+			if (programCrediting.value === '2') {
+				interestRate.textContent = '12,95% (Базовая)';
+			}
+			else if (programCrediting.value === '3') {
+				interestRate.textContent = '13,15% (Базовая)';
+			}
+			else if (programCrediting.value === '4') {
+				interestRate.textContent = '12,45% (Базовая)';
+			}
+		}
+
+		updatePriceCar();
+	</script>
+
+
+	<script>
+		function checkPriceCar() {
+			var priceCarInput = document.getElementById("priceCar");
+			var sumCreditInput = document.getElementById("sumCredit");
+			var programCrediting = document.getElementById('programCrediting');
+
+			if (priceCarInput.value === "") {
+				// Если поле priceCar пустое, блокируем поле sumCredit
+				sumCreditInput.disabled = true;
+			} else {
+				// Если поле priceCar заполнено, разблокируем поле sumCredit
+				sumCreditInput.disabled = false;
+
+				// Изменяем значения в сумме кредита
+				if (priceCarInput.value !== "" && programCrediting.value === '1') {
+					var maxCredit = (priceCarInput.value * 0.85).toFixed(2);
+
+					if (maxCredit <= 5000000) {
+						sumCreditInput.placeholder = 'От 100 000 руб. до ' + maxCredit + ' руб.';
+						sumCreditInput.min = '100000';
+						sumCreditInput.max = maxCredit;
+					}
+					else {
+						sumCreditInput.placeholder = 'От 100 000 руб. до 5 000 000 руб.';
+						sumCreditInput.min = '100000';
+						sumCreditInput.max = '5000000';
+					}
+				}
+				else if (priceCar.value === "") {
+					sumCreditInput.placeholder = 'От 100 000 руб. до 5 000 000 руб.';
+					sumCreditInput.min = '100000';
+					sumCreditInput.max = '5000000';
+				}
+				else {
+					var maxCredit = (priceCarInput.value * 0.7).toFixed(2);
+					if (maxCredit <= 5000000) {
+						sumCreditInput.placeholder = 'От 100 000 руб. до ' + maxCredit + ' руб.';
+						sumCreditInput.min = '100000';
+						sumCreditInput.max = priceCarInput.value * 0.7;
+					}
+					else {
+						sumCreditInput.placeholder = 'От 100 000 руб. до 5 000 000 руб.';
+						sumCreditInput.min = '100000';
+						sumCreditInput.max = '5000000';
+					}
+				}
+			}
+		}
+	</script>
+
+	<script>
+		function checkNumberMonths() {
+			// Получаем поле ввода
+			var numberMonthsInput = document.getElementById("numberMonths");
+
+			// Получаем введенное значение
+			var inputValue = parseInt(numberMonthsInput.value);
+
+			// Проверяем, является ли введенное значение целым числом и находится ли оно в диапазоне от 12 до 84
+			if (Number.isInteger(inputValue) && inputValue >= 12 && inputValue <= 84) {
+				// Введенное значение корректно, удаляем класс с индикацией ошибки (если он был добавлен ранее)
+				numberMonthsInput.classList.remove("error");
+			} else {
+				// Введенное значение некорректно, добавляем класс с индикацией ошибки
+				numberMonthsInput.classList.add("error");
+				alert("Значение может быть от 12 до 84");
+				numberMonthsInput.value = ""; // Очистить поле ввода
+			}
+		}
+	</script>
+
+</body>
+
+</html>
